@@ -9,7 +9,6 @@ app.json
 /src/node_modules/*
 /src/render_modules/*
 /src/.idea/*
-app.yml
 debug
 
 
