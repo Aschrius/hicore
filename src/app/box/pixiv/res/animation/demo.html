@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <script src="jszip.min.js"></script>
+    <script src="jszip-utils.js"></script>
+</head>
+<body>
+</body>
+<script>
+    let path = window.location.href.split('#');
+    path = path[1];
+    JSZipUtils.getBinaryContent(path, function (err, data) {
+        if (err) {
+            throw err;
+        }
+        JSZip.loadAsync(data).then(function (zip) {
+            let datas = [];
+            zip.forEach(function (relativePath, zipEntry) {
+                base64Data = btoa(String.fromCharCode.apply(null, zipEntry._data.compressedContent));
+                datas.push(base64Data)
+            });
+            var image = document.createElement('img');
+            document.body.appendChild(image);
+            let i = 0;
+            setInterval(function () {
+                i++;
+                image.src = 'data:image/png;base64,' + datas[i % datas.length];
+            }, 150);
+        });
+    });
+</script>
+</html>

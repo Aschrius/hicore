@@ -1,0 +1,36 @@
+{
+  "name": "atools",
+  "version": "5.0.0",
+  "author": {
+    "name": "Aschrius"
+  },
+  "main": "./main",
+  "build": {
+    "appId": "at.eylsun.com",
+    "files": [
+      "app/**/*",
+      "node_modules/**/*",
+      "package.json"
+    ]
+  },
+  "scripts": {
+    "start": "electron .",
+    "package": "electron-packager ./ --all --out ~/Desktop/app --version 1.6.6 --overwrite --icon=./src/img/weather.ico"
+  },
+  "dependencies": {
+    "cheerio": "^0.22.0",
+    "csv": "^1.1.1",
+    "fluent-ffmpeg": "^2.1.2",
+    "iconv-lite": "^0.4.17",
+    "js-yaml": "^3.8.3",
+    "level": "^1.7.0",
+    "log4js": "^1.1.1",
+    "nedb": "^1.8.0",
+    "request": "^2.81.0",
+    "sqlite3": "^3.1.8",
+    "xml2js": "^0.4.17"
+  },
+  "devDependencies": {
+    "electron": "^1.6.6"
+  }
+}

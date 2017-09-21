@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>ATools</title>
+    <script>
+        if (typeof(require) != 'undefined') {
+            var Menu = require('electron').remote.Menu;
+            Menu.setApplicationMenu(null);
+        }
+    </script>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <style type="text/css">* {
+        -webkit-user-select: none;
+        user-select: none
+    }
+
+    .ui-bar-a, .ui-page-theme-a .ui-bar-inherit, html .ui-bar-a .ui-bar-inherit, html .ui-body-a .ui-bar-inherit, html body .ui-group-theme-a .ui-bar-inherit {
+        background-color: #262626;
+        color: #fdfffd
+    }
+
+    *, body, input, select, textarea, button, .ui-btn {
+        font-family: "Microsoft YaHei UI", "微软雅黑", serif
+    }</style>
+</head>
+
+<body>
+<div id="appLoadId">
+    <style type="text/css" scoped>.loading {
+        padding: 0;
+        position: relative;
+        background: #eee;
+        width: 84px;
+        height: 84px;
+        margin: 0 auto;
+        -webkit-user-select: none;
+        -webkit-app-region: drag
+    }
+
+    .loading_center {
+        position: absolute;
+        top: 34px;
+        left: 34px;
+        height: 10px;
+        width: 10px;
+        background-color: #6cf;
+        border: 2px solid #6cf;
+        border-left-color: transparent;
+        border-right-color: transparent;
+        animation: spin 1s infinite;
+        -webkit-animation: spin 2s infinite;
+        -webkit-user-select: none;
+        -webkit-app-region: drag
+    }
+
+    .loading_circle {
+        position: absolute;
+        top: 19px;
+        left: 19px;
+        height: 40px;
+        width: 40px;
+        background-color: #fff;
+        border: 2px solid #fff;
+        border-left-color: transparent;
+        border-right-color: transparent;
+        animation: spin 1s infinite;
+        -webkit-animation: spin 3s infinite;
+        -webkit-user-select: none;
+        -webkit-app-region: drag
+    }
+
+    @-webkit-keyframes spin {
+        0% {
+            -webkit-transform: rotate(0deg)
+        }
+        50% {
+            -webkit-transform: rotate(360deg)
+        }
+        100% {
+            -webkit-transform: rotate(0deg)
+        }
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg)
+        }
+        50% {
+            transform: rotate(360deg)
+        }
+        100% {
+            transform: rotate(0deg)
+        }
+    }
+
+    .loading_circle2 {
+        position: absolute;
+        top: 0;
+        height: 80px;
+        width: 80px;
+        background-color: #6cf;
+        border: 2px solid #6cf;
+        border-left-color: transparent;
+        border-right-color: transparent;
+        animation: spin2 2s infinite;
+        -webkit-animation: spin2 2s infinite;
+        -webkit-user-select: none;
+        -webkit-app-region: drag
+    }
+
+    @-webkit-keyframes spin2 {
+        0% {
+            -webkit-transform: rotate(0deg)
+        }
+        50% {
+            -webkit-transform: rotate(360deg)
+        }
+        100% {
+            -webkit-transform: rotate(0deg)
+        }
+    }
+
+    @keyframes spin2 {
+        0% {
+            transform: rotate(0deg)
+        }
+        50% {
+            transform: rotate(360deg)
+        }
+        100% {
+            transform: rotate(0deg)
+        }
+    }
+
+    .reload {
+        border-radius: 50%;
+        position: relative;
+        top: 50px;
+        right: 50px;
+        background: #FCC;
+        height: 15px;
+        width: 15px;
+        color: #fff;
+        cursor: pointer
+    }
+
+    .exit {
+        position: relative;
+        left: 120px;
+        cursor: pointer;
+        width: 20px;
+        height: 20px
+    }
+
+    .exit_l {
+        position: relative;
+        -webkit-transform: rotate(45deg);
+        background: #FCC;
+        width: 5px;
+        height: 20px;
+        color: #fff;
+        cursor: pointer
+    }
+
+    .exit_r {
+        position: relative;
+        top: -20px;
+        -webkit-transform: rotate(-45deg);
+        background: #FCC;
+        width: 5px;
+        height: 20px;
+        color: #fff;
+        cursor: pointer
+    }</style>
+    <div style="float:left;width:100%">
+        <p>&nbsp;</p>
+        <div>
+            <div class="loading">
+                <div class="loading_circle2"></div>
+                <div class="loading_circle"></div>
+                <div class="loading_center"></div>
+                <div style="" class="reload" id="reload"></div>
+                <div class="exit" id="exit">
+                    <div class="exit_l"></div>
+                    <div class="exit_r"></div>
+                </div>
+            </div>
+        </div>
+        <br>
+        <br>
+        <div style="color:#AAA;font-size:18px;text-align:center;width:100%;cursor:default">
+            <strong id="appMsgId">ATools</strong>
+            <br>
+            <span style="color:#bbb;font-size:14px;">6.0.0</span>
+        </div>
+        <br>
+        <div style="cursor:default;font-size:12px;text-align:center;color:#666;width:100%">Copyright © 2014 - 2017 eylsun.
+            <br>All Rights Reserved.
+        </div>
+    </div>
+</div>
+</body>
+
+</html>
