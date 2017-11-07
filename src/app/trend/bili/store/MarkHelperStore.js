@@ -75,11 +75,41 @@ Ext.define('Tool.trend.bili.store.MarkHelperStore', {
                 record.save({
                     scope: this,
                     failure: function (record, operation) {
-                        reject(JSON.parse(operation.error.response.responseText).msg);
+                        try {
+                            reject(JSON.parse(operation.error.response.responseText).msg);
+                        } catch (e) {
+                            reject('服务器好像有问题，解析数据失败');
+                        }
                     },
                     success: function (record, operation) {
                         let resp = operation.getResponse();
-                        resolve(JSON.parse(resp.responseText).data)
+                        let json = JSON.parse(resp.responseText);
+                        resolve(json.data)
+
+                        let pan = Ext.ComponentQuery.query('trend-bili_mark-pan')[0];
+                        let form = pan.down('form[action=markHelper]');
+                        form.setTitle(`辅助`);
+                        pan.dto.index = null;
+
+
+                        if (json.data && json.data.index) {
+                            let index = json.data.index;
+                            pan.dto.index = index;
+                            form.setTitle(`辅助 - 第${index.batchNo}期`);
+
+                            let hidePickup = false;
+                            if (index.status != null)
+                                if (index.status == 2 || index.status == 1 || index.status == -1) {
+                                    hidePickup = true;
+                                }
+
+                            if (!hidePickup) {
+                                let grid = pan.down('grid[action=markHelper]');
+                                grid.down('actioncolumn[action=addOrDeleteAction]').show();
+                            }
+
+                        }
+
                     },
                     callback: function (record, operation, success) {
                     }
@@ -149,6 +179,7 @@ Ext.define('Tool.trend.bili.store.MarkHelperStore', {
                             data.list.forEach(function (data, index) {
                                 markMap.set(data.aid, {
                                     status: data.status,
+                                    pickupBatchNo: data.pickupBatchNo,
                                     pickupStatus: data.pickupStatus,
                                     blackStatus: data.blackStatus,
                                     description: data.description,
@@ -178,6 +209,7 @@ Ext.define('Tool.trend.bili.store.MarkHelperStore', {
                                     archive.thisStatus = mark.thisStatus;
                                     archive.thisMarkStatus = mark.thisMarkStatus;
                                     archive.pickupStatus = mark.pickupStatus;
+                                    archive.pickupBatchNo = mark.pickupBatchNo;
                                 }
                                 archives.push(archive);
                             });
@@ -233,6 +265,7 @@ Ext.define('Tool.trend.bili.store.MarkHelperStore', {
                             data.list.forEach(function (data, index) {
                                 markMap.set(data.aid, {
                                     status: data.status,
+                                    pickupBatchNo: data.pickupBatchNo,
                                     pickupStatus: data.pickupStatus,
                                     blackStatus: data.blackStatus,
                                     description: data.description,
@@ -255,6 +288,7 @@ Ext.define('Tool.trend.bili.store.MarkHelperStore', {
                                 archive.thisStatus = mark.thisStatus;
                                 archive.thisMarkStatus = mark.thisMarkStatus;
                                 archive.pickupStatus = mark.pickupStatus;
+                                archive.pickupBatchNo = mark.pickupBatchNo;
                                 archive.blackStatus = mark.blackStatus;
                             });
                         } catch (e) {
@@ -321,6 +355,7 @@ Ext.define('Tool.trend.bili.store.MarkHelperStore', {
                         markMap.set(data.aid, {
                             status: data.status,
                             pickupStatus: data.pickupStatus,
+                            pickupBatchNo: data.pickupBatchNo,
                             description: data.description,
                             userId: data.userId,
                             thisMarkStatus: data.thisMarkStatus,
@@ -340,6 +375,7 @@ Ext.define('Tool.trend.bili.store.MarkHelperStore', {
                         archive.thisStatus = mark.thisStatus;
                         archive.thisMarkStatus = mark.thisMarkStatus;
                         archive.pickupStatus = mark.pickupStatus;
+                        archive.pickupBatchNo = mark.pickupBatchNo;
                         archive.blackStatus = mark.blackStatus;
                     });
                 } catch (e) {

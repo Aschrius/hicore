@@ -4,11 +4,11 @@ Ext.define('Tool.sys.auth.view.RolePan', {
     id: 'sys-auth_role-pan',
     title: '角色',
     initComponent: function () {
-        let me = this;
-        me.layout = 'fit';
-        me.border = false;
-        me.bodyBorder = false;
-        me.items = [{
+        let self= this;
+        self.layout = 'fit';
+        self.border = false;
+        self.bodyBorder = false;
+        self.items = [{
             xtype: 'grid',
             border: false,
             store: 'Tool.sys.auth.store.RoleStore',

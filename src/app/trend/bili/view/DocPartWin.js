@@ -93,11 +93,34 @@ Ext.define('Tool.trend.bili.view.DocPartWin', {
                 }, {
                     text: '稿件',
                     dataIndex: 'status',
-                    width: 50
+                    width: 50,
+                    renderer: function (value, cellmeta, record, rowIndex, columnIndex, store) {
+                        if (value == 0) {
+                            value = `<span style="color: dodgerblue;">新</span>`;
+                        } else if (value == 1) {
+                            value = `<span style="color: darkslategray;">旧</span>`;
+                        } else if (value == -1) {
+                            value = `<span style="color: red;">丢</span>`;
+                        } else if (value == -2) {
+                            value = `<span style="color: red;">回</span>`;
+                        } else {
+                            value = `<span style="color: lightgray;">？</span>`;
+                        }
+                        return value;
+                    }
                 }, {
                     text: '收录',
                     dataIndex: 'mark_status',
-                    width: 50
+                    width: 50,
+                    renderer: function (value, cellmeta, record, rowIndex, columnIndex, store) {
+                        if (value == 1) {
+                            value = `<span style="color: green;font-weight: bold">√</span>`;
+                        } else {
+                            value = `<span style="color: lightgrey;">×</span>`;
+                        }
+                        return value;
+                    }
+
                 }
             ],
             dockedItems: [

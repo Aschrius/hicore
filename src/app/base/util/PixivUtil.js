@@ -192,7 +192,17 @@ class PixivUtil {
 
 
                 let reg_img = new RegExp('<body><img src="([^"]+)', 'g');
-                let imageUrl = (reg_img.exec(result.responseText))[1];
+                let imageUrl = reg_img.exec(result.responseText);
+                if(imageUrl!=null) {
+                    imageUrl = imageUrl[1];
+                }else{
+                    // data-src="https://i.pximg.net/img-original/img/2015/07/30/22/50/38/5169" class="original-image"
+                    reg_img = new RegExp('data-src="([^"]+)" class="original-image"', 'g');
+                    imageUrl = reg_img.exec(result.responseText);
+                    imageUrl = imageUrl[1];
+                }
+
+
                 imageUrl = imageUrl.replace(/\\\//g, '/');
                 imageUrls.push(imageUrl);
 

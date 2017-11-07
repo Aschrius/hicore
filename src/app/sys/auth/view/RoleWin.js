@@ -6,26 +6,35 @@ Ext.define('Tool.sys.auth.view.RoleWin', {
         actionType: 0,// 查:0增1,改2,删-1
     },
     initComponent: function () {
-
-        let me = this;
+        let self = this;
+        let interfaceIdSet = new Set();
+        try {
+            console.log('-----------')
+            console.log(self.dto)
+            console.log(self.dto.parent)
+            console.log(self.dto.parent.parent)
+            interfaceIdSet = self.dto.parent.parent.interfaceIdSet;
+        } catch (e) {
+            console.error(e);
+        }
 
         let iconCls = 'Vcard';
-        if (me.showType == 1) {
+        if (self.showType == 1) {
             iconCls = 'Vcardadd';
-        } else if (me.showType == 2) {
+        } else if (self.showType == 2) {
             iconCls = 'Vcardedit';
-        } else if (me.showType == -1) {
+        } else if (self.showType == -1) {
             iconCls = 'Vcarddelete';
         } else {
             iconCls = 'Vcard';
         }
 
 
-        me.title = '<span style="font-weight: bold;">角色信息</span>';
-        me.resizable = false;
-        me.modal = true;
-        me.iconCls = iconCls;
-        me.items = [{
+        self.title = '<span style="font-weight: bold;">角色信息</span>';
+        self.resizable = false;
+        self.modal = true;
+        self.iconCls = iconCls;
+        self.items = [{
             xtype: 'form',
             defaultType: 'textfield',
             defaults: {
@@ -41,27 +50,27 @@ Ext.define('Tool.sys.auth.view.RoleWin', {
             }, {
                 fieldLabel: '名称',
                 name: 'name',
-                readOnly: me.dto.actionType == 0,
+                readOnly: self.dto.actionType == 0,
                 allowBlank: false
             }, {
                 fieldLabel: '备注',
                 name: 'description',
-                readOnly: me.dto.actionType == 0,
+                readOnly: self.dto.actionType == 0,
                 allowBlank: false
             }]
         }];
 
-        me.buttons = [{
+        self.buttons = [{
             text: '改',
             doAction: 'doModify',
-            hidden: me.dto.actionType != 2
+            hidden: self.dto.actionType != 2 && !interfaceIdSet.has('put')
         }, {
             text: '增',
             doAction: 'doAdd',
-            hidden: me.dto.actionType != 1
+            hidden: self.dto.actionType != 1 && !interfaceIdSet.has('post')
         }];
 
 
-        me.callParent(arguments);
+        self.callParent(arguments);
     }
 });

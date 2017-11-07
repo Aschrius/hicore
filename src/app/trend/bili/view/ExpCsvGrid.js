@@ -90,8 +90,15 @@ Ext.define('Tool.trend.bili.view.ExpCsvGrid', {
             hidden: me.dto.showType == 2,
             width: 100,
             renderer: function (value) {
-                let idx = zoneStore.find('type', value);
-                return zoneStore.getAt(idx).get('name');
+                try {
+
+                    // console.log(value)
+                    let idx = zoneStore.find('type', value);
+                    // console.log(idx)
+                    return zoneStore.getAt(idx).get('name');
+                } catch (e) {
+                    console.error(e)
+                }
             }
         }];
         this.callParent();

@@ -2,20 +2,26 @@ Ext.define('Tool.trend.bili.view.IndexMenu', {
     extend: 'Ext.menu.Menu',
     alias: 'widget.trend-bili_index-menu',
     id: 'trend-bili_index-menu',
+    action: 'top',
     initComponent: function () {
 
-        let me = this;
+        let self = this;
+        let interfaceIdSet = new Set();
+        try {
+            if (self.dto.parent.interfaceIdSet != null) interfaceIdSet = self.dto.parent.interfaceIdSet;
+        } catch (e) {
+        }
 
-        let status = me.dto.record.get('status');
+        let status = self.dto.record.get('status');
 
-        me.style = {
+        self.style = {
             overflow: 'visible'
         };
         let statusText = null;
 
         if (status == 6) {
             statusText = '统计排名';
-        } else if (status == 3) {
+        } else if (status == 3 || status == -1) {
             statusText = '重新统计';
         } else {
         }
@@ -28,30 +34,40 @@ Ext.define('Tool.trend.bili.view.IndexMenu', {
                 text: 'part' + record.get('part') + ' - ' + record.get('name'),
                 doAction: 'showDocPartWin',
                 dto: {
-                    record:record,
-                    parent: me.dto
+                    record: record,
+                    parent: self.dto
                 },
             });
         }
 
-        me.items = [
+        self.items = [
+
             {
-                text: '<span style="color:green;">' + statusText + '</span>',
-                iconCls: 'Vcardadd',
-                hidden: status != 6 && status != 3,
+                text: '<span style="color:green;">保存结果</span>',
+                hidden: status != 3 || !interfaceIdSet.has('putIndex'),
                 doAction: 'doRank',
                 dto: {
-                    type: 1004
+                    type: 2004
                 }
             },
             {
                 text: '<span style="color:green;">发布稿件</span>',
                 iconCls: 'Vcardadd',
-                hidden: status != 2,
-                doAction: 'doRank',
-                dto: {
-                    type: 1005
-                }
+                hidden: status != 2 || !interfaceIdSet.has('putIndex'),
+                menu: [{
+                    xtype: 'textfield',
+                    action: 'aid',
+                    labelSeparator: '',
+                    labelWidth: 20,
+                    fieldLabel: 'av'
+                }, {
+                    xtype: 'button',
+                    text: '发布',
+                    doAction: 'doRank',
+                    dto: {
+                        type: 2005
+                    }
+                }]
             },
             {
                 text: '<span style="color:green;">查看结果</span>',
@@ -61,8 +77,10 @@ Ext.define('Tool.trend.bili.view.IndexMenu', {
                 dto: {
                     actionType: 1,
                     winXtype: 'trend-bili_doc_filter-win',
-                    // winXtype: 'trend-bili_doc-win',
                     beforeShowFn: function (win, dto, data) {
+                        if (status != 3 && status != 2 && status != 1) {
+                            return;
+                        }
                         let store = Ext.StoreMgr.get('trend-bili_filter-store');
                         Ext.apply(store.getProxy().extraParams, {
                             rankId: data.rankId,
@@ -88,7 +106,8 @@ Ext.define('Tool.trend.bili.view.IndexMenu', {
                                             let r = store.getAt(i);
                                             radiogroup.add({
                                                 boxLabel: r.get('name'),
-                                                inputValue: r.get('id')
+                                                inputValue: r.get('id'),
+                                                record: r
                                             });
                                         }
 
@@ -112,16 +131,26 @@ Ext.define('Tool.trend.bili.view.IndexMenu', {
             {
                 text: '<span style="color:green;">导出数据</span>',
                 iconCls: 'Vcardadd',
-                hidden: status != 3 && status != 2 && status != 1,
+                hidden: status != 2,
+                // hidden: status != 3 && status != 2 && status != 1,
                 menu: [].concat(datMenus)
             },
             {
                 text: '<span style="color:gray;">统计中</span>',
                 hidden: status != 4 && status != 5,
+            },
+            {
+                text: '<span style="color:green;">' + statusText + '</span>',
+                iconCls: 'Vcardadd',
+                hidden: status != 6 && status != 3 && status != -1 || !interfaceIdSet.has('putIndex'),
+                doAction: 'doRank',
+                dto: {
+                    type: 1004
+                }
             }
         ];
 
-        me.callParent(arguments);
+        self.callParent(arguments);
     }
 });
 

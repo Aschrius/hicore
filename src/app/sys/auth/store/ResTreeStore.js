@@ -9,7 +9,10 @@ Ext.define('Tool.sys.auth.store.ResTreeStore', {
         resTypeId: 0,
         id: 1
     },
-    // TODO 有空改成通用的
-    proxy: ExtUtil.getRestModelProxyTpl(AT.app.server + '/sys/auth/res/:id/res', ['id'], {appendId: false}),
+    proxy: Tool.base.ux.BaseRestProxy.create({
+        url: AT.app.server + '/sys/auth/res/:id/res',
+        idArray: ['id'],
+        appendId: false
+    }),
     nodeParam: 'id'
 });

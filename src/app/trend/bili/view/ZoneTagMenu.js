@@ -14,6 +14,7 @@ Ext.define('Tool.trend.bili.view.ZoneTagMenu', {
             dto: {}
         }, {
             text: '<span style="color:green;">导出数据源</span>',
+            hidden:true,
             iconCls: 'Vcardadd',
             doAction: 'doExport',
             dto: {}

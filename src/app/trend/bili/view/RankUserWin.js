@@ -15,6 +15,7 @@ Ext.define('Tool.trend.bili.view.RankUserWin', {
 
         me.modal = true;
         me.resizable = false;
+        me.maximized = true;
         me.height = 300;
         me.width = 400;
         me.items = [
@@ -24,31 +25,53 @@ Ext.define('Tool.trend.bili.view.RankUserWin', {
                 store: 'Tool.trend.bili.store.RankUserStore',
                 columns: [{
                     xtype: 'rownumberer',
-                    flex: 1
+                    width: 60,
                 }, {
                     text: '',
                     dataIndex: 'pic',
-                    flex: 1,
-                    renderer: function (value) {
+                    width: 50,
+                    sortable: false,
+                    renderer: function (value, com, r) {
+                        if (value == null) {
+                            if (r.get('type') != null) {
+                                value = __dirname + '/base/res/eylsun_active.png';
+                            } else {
+                                value = __dirname + '/base/res/eylsun.png';
+                            }
+                        }
                         return '<img style="width: 20px;" src="' + value + '">';
                     }
                 }, {
+                    text: 'id',
+                    sortable: false,
+                    dataIndex: 'id',
+                    flex: 1
+                }, {
+                    text: 'mid',
+                    sortable: false,
+                    dataIndex: 'mid',
+                    flex: 1
+                }, {
                     text: '名称',
+                    sortable: false,
                     dataIndex: 'username',
                     flex: 3
                 }, {
                     xtype: 'checkcolumn',
+                    sortable: false,
                     text: '运营组',
                     width: 60,
                     dataIndex: 'type_1',
 
                 }, {
                     xtype: 'checkcolumn',
+                    sortable: false,
                     text: '收录组',
                     dataIndex: 'type_2',
                     width: 60,
                 }, {
                     xtype: 'checkcolumn',
+                    sortable: false,
                     text: '视频组',
                     dataIndex: 'type_3',
                     width: 60,

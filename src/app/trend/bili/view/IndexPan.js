@@ -5,18 +5,25 @@ Ext.define('Tool.trend.bili.view.IndexPan', {
     title: '主控',
     initComponent: function () {
 
+        let self = this;
+        let interfaceIdSet = new Set();
+        try {
+            if (self.dto.interfaceIdSet != null) interfaceIdSet = self.dto.interfaceIdSet;
+        } catch (e) {
+        }
 
-        let me = this;
-        me.layout = 'fit';
-        me.border = false;
-        me.bodyBorder = false;
-        me.items = [{
+
+        self.layout = 'fit';
+        self.border = false;
+        self.bodyBorder = false;
+        self.items = [{
             xtype: 'grid',
             border: false,
             store: 'Tool.trend.bili.store.IndexStore',
             tbar: [
                 "->", {
                     xtype: 'button',
+                    hidden: !interfaceIdSet.has('post'),
                     text: '新建',
                     iconCls: 'Vcardadd',
                     doAction: 'show',

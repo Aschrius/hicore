@@ -2,17 +2,7 @@
 Ext.define('Tool.trend.IndexController', {
     extend: 'Tool.base.controller.MvcController',
     statics: {},
-    controllers: [
-        // /*** 制作 **/
-        // 'Tool.trend.bili.controller.MarkController',
-        // 'Tool.trend.bili.controller.MaterialController',
-        // 'Tool.trend.bili.controller.VideoController',
-        //
-        // /*** 管理 **/
-        // 'Tool.trend.bili.controller.RankController',
-        // 'Tool.trend.bili.controller.ZoneController',
-        // 'Tool.trend.bili.controller.IndexController',
-    ],
+    controllers: [],
     views: [
         'Tool.trend.IndexPan',
         'Tool.trend.bili.view.LoginWin'
@@ -29,7 +19,6 @@ Ext.define('Tool.trend.IndexController', {
         'Tool.base.util_node.ElectronUtil',
         'Tool.base.util_node.ImageUtil',
         'Tool.base.util_node.NedbUtil',
-        // 'Tool.base.util_node.LevelDbUtil',
         'Tool.base.util_node.SqliteUtil',
         'Tool.base.ux.DateTimeField',
         'Tool.base.ux.DateTimePicker',
@@ -42,11 +31,8 @@ Ext.define('Tool.trend.IndexController', {
         this.initEvent();
         this.initCache();
 
-
-
     },
     initCache: function () {
-
         try {
             AT.cache.sqlite = {
                 trend_bili: SqliteUtil.getConnection(AT.app.path + '/../conf/trend_bili.sqlite')
@@ -54,10 +40,6 @@ Ext.define('Tool.trend.IndexController', {
             AT.cache.nedb = {
                 trend_bili: NedbUtil.getConnection(AT.app.path + '/../conf/trend_bili.nedb')
             };
-
-            // AT.cache.leveldb = {
-            //     trend_bili: LevelDbUtil.getConnection(AT.app.path + '/../conf/trend_bili.leveldb')
-            // };
         } catch (e) {
             console.log(e)
         }
@@ -80,20 +62,95 @@ Ext.define('Tool.trend.IndexController', {
         // this.updateLoginEylsunUI();
     },
     initRank: function () {
+        this.initRankView();
         let userRankStore = Ext.StoreMgr.get('trend-bili_user_rank-store');
         userRankStore.loadPage(1, {
             scope: this,
             callback: function (records, operation, success) {
-                let id = userRankStore.getAt(0).get('id');
+                let record = userRankStore.getAt(0);
+                if (record == null) return;
+                let id = record.get('id');
                 Ext.ComponentQuery.query('trend-index-pan combobox[name=rank]')[0].setValue(id);
+
 
             }
         });
 
     },
+    initRankView: function () {
+        let combobox = Ext.ComponentQuery.query('trend-index-pan combobox[name=rank]')[0];
+        let rankId = combobox.getValue();
+        let record = combobox.getStore().getById(rankId);
+
+        let pan = Ext.ComponentQuery.query('trend-index-pan')[0];
+
+
+        let component_mark = pan.down('component[toModule=trend-bili_mark-pan]');
+        if (component_mark != null) component_mark.hide();
+
+        let component_index = pan.down('component[toModule=trend-bili_index-pan]');
+        if (component_index != null) component_index.hide();
+
+        let component_video = pan.down('component[toModule=trend-bili_video-pan]');
+        if (component_video != null) component_video.hide();
+
+        let component_material = pan.down('component[toModule=trend-bili_material-pan]');
+        if (component_material != null) component_material.hide();
+
+        let tabpanel = Ext.ComponentQuery.query('mvcview tabpanel')[0];
+        Ext.ComponentQuery.query('trend-bili_mark-pan').forEach(function (component) {
+            tabpanel.remove(component);
+        });
+        Ext.ComponentQuery.query('trend-bili_index-pan').forEach(function (component) {
+            tabpanel.remove(component);
+        });
+        Ext.ComponentQuery.query('trend-bili_video-pan').forEach(function (component) {
+            tabpanel.remove(component);
+        });
+        Ext.ComponentQuery.query('trend-bili_material-pan').forEach(function (component) {
+            tabpanel.remove(component);
+        });
+
+
+        Ext.ComponentQuery.query('trend-index-pan label[action=哔哩哔哩]')[0].setText('哔哩哔哩');
+        if (record != null) {
+            let userRankType = record.get('userRankType');
+            // 1.master;2.mark;3.vide
+            let text = '';
+            if (userRankType == 1) {
+                component_mark.show();
+                component_index.show();
+                component_video.show();
+                component_material.show();
+                text = '运营组';
+
+            } else if (userRankType == 2) {
+                component_mark.show();
+                component_index.show();
+                component_video.show();
+                component_material.show();
+                text = '收录组';
+
+            } else if (userRankType == 3) {
+                component_index.show();
+                component_video.show();
+                component_material.show();
+                text = '视频组';
+            }
+            Ext.ComponentQuery.query('trend-index-pan label[action=哔哩哔哩]')[0].setText('哔哩哔哩 - ' + text);
+        }
+
+    },
     initIndex: function () {
+
+        // 初始化index
         Ext.ComponentQuery.query('trend-index-pan combobox[name=index]')[0].setValue(null);
-        let rankId = Ext.ComponentQuery.query('trend-index-pan combobox[name=rank]')[0].getValue();
+        let combobox = Ext.ComponentQuery.query('trend-index-pan combobox[name=rank]')[0];
+        let rankId = combobox.getValue();
+        // 初始化界面显示
+
+        this.initRankView();
+
         let rankIndexstore = Ext.StoreMgr.get('trend-bili_rank_index-store');
         Ext.apply(rankIndexstore.getProxy().extraParams, {
             rankId: rankId

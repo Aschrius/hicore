@@ -9,6 +9,7 @@ Ext.define('Tool.trend.bili.controller.MarkController', {
         'Tool.trend.bili.view.MarkPan',
         'Tool.trend.bili.view.MarkWin',
         'Tool.trend.bili.view.ExpressionsWin',
+        'Tool.trend.bili.view.MarkSearchWin',
     ],
     stores: [
         'Tool.trend.bili.store.BiliHotStore',
@@ -16,10 +17,12 @@ Ext.define('Tool.trend.bili.controller.MarkController', {
         'Tool.trend.bili.store.MarkStore',
         'Tool.trend.bili.store.MarkStatusStore',
         'Tool.trend.bili.store.PickupStatusStore',
+        'Tool.trend.bili.store.MarkSearchStore',
     ],
     models: [
         'Tool.trend.bili.model.MarkModel',
         'Tool.trend.bili.model.MarkBatchModel',
+        'Tool.trend.bili.model.DocPartModel',
     ],
     init: function () {
 
@@ -34,10 +37,28 @@ Ext.define('Tool.trend.bili.controller.MarkController', {
             'trend-bili_expressions-win button[doAction]': {click: me.doAction},
 
             'trend-bili_mark-pan grid[action=mark] pagingtoolbar': {beforechange: me.fitParams2Gird},
+            'trend-bili_mark-pan grid[action=mark] datefield': {change: me.resetMarkData},
             'trend-bili_mark-pan grid[action=mark] radiogroup': {change: me.resetMarkData},
             'trend-bili_mark-pan grid[action=mark] combo': {change: me.resetMarkData},
 
-            'trend-bili_mark-pan': {activate: me.initView},
+            'trend-bili_mark-pan': {
+                activate: function (self) {
+                    me.initView();
+                    Ext.StoreMgr.get('trend-bili_mark-store').on({
+                        load: me.initMarkView,
+                        scope: this
+                    })
+                },
+                destroy: function (self) {
+                    Ext.StoreMgr.get('trend-bili_mark-store').un({
+                        load: me.initMarkView
+                    });
+                }, hide: function (self) {
+                    Ext.StoreMgr.get('trend-bili_mark-store').un({
+                        load: me.initMarkView
+                    });
+                }
+            },
 
 
             'trend-bili_mark-pan grid[action=markHelper] pagingtoolbar': {beforechange: me.fitParams2HeplerGird},
@@ -48,11 +69,60 @@ Ext.define('Tool.trend.bili.controller.MarkController', {
                 columnschanged: me.modifyHeader
             },
 
+            'trend-bili_mark-pan actioncolumn': {
+                addOrDelclick: me.doPickup
+            },
+
+            /* search */
+            'trend-bili_mark_search-win grid pagingtoolbar': {beforechange: me.fitParams2SearchGird},
+            'trend-bili_mark_search-win grid radiogroup': {change: me.resetSearchData},
+
+            'trend-bili_mark_search-win grid': {
+                edit: me.doModifyFromGrid,
+            },
+
+
         });
+    },
+    initMarkView: function (store, records, successful, operation, eOpts) {
+        let pan = Ext.ComponentQuery.query('trend-bili_mark-pan')[0];
+        let form = pan.down('form[action=mark]');
+        form.setTitle(`收录`);
+
+        let rspContent = store.getProxy().rspContent;
+        setTimeout(() => {
+            try {
+                rspContent = store.getProxy().rspContent;
+                let json = JSON.parse(rspContent);
+
+                let index = json.data.index;
+                pan.dto.index = index;
+
+                let batchNo = json.data.index.batchNo;
+                form.setTitle(`收录 - 第${batchNo}期`);
+
+                let hidePickup = false;
+                if (index.status != null)
+                    if (index.status == 2 || index.status == 1 || index.status == -1) {
+                        hidePickup = true;
+                    }
+
+                if (!hidePickup) {
+                    let grid = pan.down('grid[action=mark]');
+                    grid.down('actioncolumn[action=addOrDeleteAction]').show();
+                }
+
+
+            } catch (e) {
+                console.error(e);
+                form.setTitle('收录');
+            }
+
+        }, 500);
+
     },
     initView: function () {
         let me = this;
-
         me.fitParams2Gird();
         let markStore = Ext.StoreMgr.get('trend-bili_mark-store');
         markStore.loadPage(1);
@@ -132,7 +202,7 @@ Ext.define('Tool.trend.bili.controller.MarkController', {
         record.set('status', data.status);
         record.set('pickupStatus', data.pickupStatus);
         record.set('description', data.description);
-        record.set('pickupIndexId', me.getIndexId());
+        // record.set('pickupIndexId', me.getIndexId());
         record.set('id', undefined);
         record.set('aid', parseInt(data.aid));
         record.save({
@@ -154,7 +224,7 @@ Ext.define('Tool.trend.bili.controller.MarkController', {
                 rankId: me.getRankId()
             });
             record.set('id', null);
-            record.set('pickupIndexId', me.getIndexId());
+            // record.set('pickupIndexId', me.getIndexId());
             for (let key in params) {
                 record.set(key, params[key]);
             }
@@ -253,6 +323,11 @@ Ext.define('Tool.trend.bili.controller.MarkController', {
         let myMask = new Ext.LoadMask(myPanel, {msg: "正在操作", autoScroll: true, style: 'padding:10px;'});
         return myMask;
     },
+    getMarkSearchMask: function () {
+        let myPanel = Ext.ComponentQuery.query('trend-bili_mark_search-win grid')[0];
+        let myMask = new Ext.LoadMask(myPanel, {msg: "正在操作", autoScroll: true, style: 'padding:10px;'});
+        return myMask;
+    },
     resetMarkData: function (view, newValue, oldValue, eOpts) {
         this.fitParams2Gird();
         let markStore = Ext.StoreMgr.get('trend-bili_mark-store');
@@ -273,6 +348,12 @@ Ext.define('Tool.trend.bili.controller.MarkController', {
         markHelperStore.loadPage(1);
 
     },
+    resetSearchData: function (view, newValue, oldValue, eOpts) {
+        this.fitParams2SearchGird();
+        let searchStore = Ext.StoreMgr.get('trend-bili_mark_search-store');
+        searchStore.loadPage(1);
+
+    },
     fitParams2Gird: function () {
         let me = this;
         let pan = Ext.ComponentQuery.query('trend-bili_mark-pan')[0];
@@ -280,8 +361,10 @@ Ext.define('Tool.trend.bili.controller.MarkController', {
 
         let radiogroup = grid.down('radiogroup[action=status]');
         let radiogroup_value = radiogroup.getValue();
-        let combobox = grid.down('combobox[name=index]');
-        let pickUpIndexId = combobox.getValue();
+
+        let fromDatefield = pan.down('datefield[name=markfrom]');
+        let toDatefield = pan.down('datefield[name=markto]');
+
         let status = radiogroup_value.status;
         let isPickup = false;
         let pickupStatus = null;
@@ -296,7 +379,8 @@ Ext.define('Tool.trend.bili.controller.MarkController', {
             rankId: me.getRankId(),
             status: status,
             pickupStatus: pickupStatus,
-            pickUpIndexId: pickUpIndexId
+            from: Ext.util.Format.date(fromDatefield.getValue(), "Ymd"),
+            to: Ext.util.Format.date(toDatefield.getValue(), "Ymd"),
         });
     },
 
@@ -330,6 +414,24 @@ Ext.define('Tool.trend.bili.controller.MarkController', {
             to: Ext.util.Format.date(to, "Ymd"),
             original: original,
             mask: me.getMarkHelperMask()
+        });
+    },
+
+    fitParams2SearchGird: function () {
+        let me = this;
+        let win = Ext.ComponentQuery.query('trend-bili_mark_search-win')[0];
+        let grid = win.down('grid');
+        let radiogroup_value = grid.down('radiogroup').getValue();
+        let order = radiogroup_value.order;
+        let keyword = win.down('textfield[action=keyword]').getValue();
+
+        let searchStore = Ext.StoreMgr.get('trend-bili_mark_search-store');
+        Ext.apply(searchStore.getProxy().extraParams, {
+            rankId: me.getRankId(),
+            tid: me.getRankZoneId(),
+            keyword: keyword,
+            order: order,
+            mask: me.getMarkSearchMask()
         });
     },
     doUpdateUI_headTip: function (batchNo, status, rankInfo) {
@@ -406,6 +508,91 @@ Ext.define('Tool.trend.bili.controller.MarkController', {
         win.close();
 
         ExtUtil.showTip('操作成功，将在下次加载数据时生效');
+    },
+    doPickup: function (item, grid, oldRecord) {
+
+        // alert('doPick ');
+
+        let mask = new Ext.LoadMask(grid, {msg: "正在操作", autoScroll: true, style: 'padding:10px;'});
+        let pan = Ext.ComponentQuery.query('trend-bili_mark-pan')[0];
+        let index = pan.dto.index;
+        let pickupBatchNo = oldRecord.get('pickupBatchNo');
+
+
+        // 获取是否pickup
+        mask.show();
+        try {
+
+
+            let action = '';
+            let record = null;
+            if (pickupBatchNo == null) {
+                action = 'add';
+
+                record = Tool.trend.bili.model.DocPartModel.create({id: undefined});
+                record.id = undefined;
+                record.phantom = true;// 新建
+                record.set('id', undefined);
+
+            } else if (pickupBatchNo == index.batchNo) {
+                action = 'delete';
+
+                record = Tool.trend.bili.model.DocPartModel.create({id: oldRecord.get('aid')});
+                record.id = oldRecord.get('aid')
+                record.phantom = false;
+
+            } else {
+                action = 'forbidden';
+                ExtUtil.showTip(`已在第${pickupBatchNo}期推荐`);
+                return;
+            }
+
+
+            record.set('aid', oldRecord.get('aid'));
+            record.set('rankId', index.rankId);
+            record.set('indexId', index.id);
+            record.set('pickupBatchNo', index.batchNo);
+
+            let proxy = record.getProxy();
+            Ext.apply(proxy.extraParams, {
+                rankId: index.rankId,
+                indexId: index.id
+            });
+            record.save({
+                success: function (record, operation) {
+                    if (action == 'add') {
+                        oldRecord.set('pickupBatchNo', index.batchNo);
+                        oldRecord.commit();
+                    } else if (action == 'delete') {
+                        oldRecord.set('pickupBatchNo', null);
+                        oldRecord.commit();
+                    }
+
+
+                },
+                callback: function (record, operation, success) {
+                    mask.hide();
+                }
+            });
+
+
+        } catch (e) {
+            mask.hide();
+            throw e;
+        }
+
+
+    },
+    showMarkSearch: function (button) {
+        let keyword = button.up('panel').down('textfield[action=keyword]').getValue();
+        if (keyword.trim() == '') {
+            Ext.MessageBox.alert('提示', '检索值不允许为空');
+            return;
+        }
+        let win = Ext.widget('trend-bili_mark_search-win');
+        win.down('textfield[action=keyword]').setValue(keyword);
+        win.show(button);
+        this.resetSearchData();
     }
 
 

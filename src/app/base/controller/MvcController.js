@@ -14,6 +14,9 @@ Ext.define('Tool.base.controller.MvcController', {
         'Tool.base.ux.DateTimeField',
         'Tool.base.ux.DateTimePicker',
     ],
+    models: [
+        'Tool.base.util.AtKitchen',
+    ],
     viewStack: [],
     viewBackFlag: false,
     initCache: function () {
@@ -53,15 +56,16 @@ Ext.define('Tool.base.controller.MvcController', {
             fn = dto.beforeShowFn;
         }
 
-
-        let win = Ext.widget(dto.winXtype, {dto: dto});
-
         let menu = component.up('menu');
+        let win = null;
         let data = null;
         if (typeof (menu) != 'undefined' && menu != null) {
             dto.parent = menu.dto;
+            win = Ext.widget(dto.winXtype, {dto: dto});
             let record = dto.parent.record;
             data = record.getData();
+        } else {
+            win = Ext.widget(dto.winXtype, {dto: dto});
         }
         if (typeof fn == 'function') {
             data = fn(win, dto, data);
@@ -76,7 +80,7 @@ Ext.define('Tool.base.controller.MvcController', {
     /**
      * store 的 menu
      */
-    beforeShowMenu: function (component, record, menuXtype) {
+    beforeShowMenu: function (component, record, menuXtype, parentDto) {
 
         let menus = Ext.ComponentQuery.query('menu');
         if (menus != null) {
@@ -90,7 +94,14 @@ Ext.define('Tool.base.controller.MvcController', {
             store = component.up('grid').getStore();
         }
 
-        let menu = Ext.widget(menuXtype, {dto: {record: record, store: store, component: component}});
+        let menu = Ext.widget(menuXtype, {
+            dto: {
+                record: record,
+                store: store,
+                component: component,
+                parent: parentDto
+            }
+        });
 
         return menu;
 

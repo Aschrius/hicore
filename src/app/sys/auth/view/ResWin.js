@@ -8,7 +8,6 @@ Ext.define('Tool.sys.auth.view.ResWin', {
     initComponent: function () {
 
         let me = this;
-
         let iconCls = 'Vcard';
         if (me.dto.showType == 1) {
             iconCls = 'Vcardadd';

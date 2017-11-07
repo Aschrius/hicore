@@ -398,7 +398,8 @@ Ext.define('Tool.trend.bili.controller.RankController', {
     /*** 展示右键目录 ***/
     showMenu: function (component, record, item, index, e, eOpts) {
         e.preventDefault();
-        let menu = this.beforeShowMenu(component, record, 'trend-bili_rank-menu');
+        let pan = Ext.ComponentQuery.query('trend-bili_rank-pan')[0];
+        let menu = this.beforeShowMenu(component, record, 'trend-bili_rank-menu', pan.dto);
         menu.showAt(e.getXY());
     },
     /*** 修改排行榜 ***/

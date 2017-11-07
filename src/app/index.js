@@ -3,8 +3,8 @@ window.AT = {
     isAsar: true,
     ipcRenderer: require('electron').ipcRenderer,
     // subsystem: 'sys',
-    // subsystem: 'trend',
-    subsystem: 'box',
+    subsystem: 'trend',
+    // subsystem: 'box',
     app: {
         name: 'Tool',
         version: '6.0.0',
@@ -47,6 +47,9 @@ try {
     console.error(e);
 }
 
+// if (AT.app.theme == 1) {
+//     Ext.util.CSS.swapStyleSheet("theme", "../../render_modules/ext-6.2.0/classic/theme-crisp-touch/resources/theme-crisp-touch-all.css");
+// } else
 if (AT.app.theme == 1) {
     Ext.util.CSS.swapStyleSheet("theme", "../../render_modules/ext-6.2.0/classic/theme-triton/resources/theme-triton-all.css");
 } else {
@@ -79,8 +82,8 @@ Ext.application({
     controllers: [
         'Tool.base.controller.MvcController',
         'Tool.base.controller.LoginController',
-        // 'Tool.base.controller.IndexController',
-        'Tool.box.IndexController',
+        'Tool.base.controller.IndexController',
+        // 'Tool.box.IndexController',
     ],
     launch: function () {
         Ext.tip.QuickTipManager.init();
@@ -93,13 +96,13 @@ Ext.application({
         tabpanel.removeAll();
 
         let pan = null;
-        // pan = Ext.widget('base-index-pan');
-        // tabpanel.add(pan);
-        // tabpanel.setActiveTab(pan.id);
-
-        pan = Ext.widget('box-index-pan');
+        pan = Ext.widget('base-index-pan');
         tabpanel.add(pan);
         tabpanel.setActiveTab(pan.id);
+
+        // pan = Ext.widget('box-index-pan');
+        // tabpanel.add(pan);
+        // tabpanel.setActiveTab(pan.id);
 
         // 隐藏loading
         let loadingIframes = document.getElementsByClassName('loading');

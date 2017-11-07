@@ -20,11 +20,49 @@ Ext.define('Tool.sys.auth.model.RoleResModel', {
         'resTypeName',
         'extra'
     ],
-    proxy: ExtUtil.getRestModelProxyTpl(AT.app.server + '/sys/auth/role/:roleId/res', ['roleId'], null, 'tree'),
-    //TODO 这里需要测试下
-    proxy_: Tool.base.ux.BaseRestProxy.create({
-        url: AT.app.server + '/sys/auth/role/:roleId/res/batch',
-        idArray: ['roleId']
+    // proxy: ExtUtil.getRestModelProxyTpl(AT.app.server + '/sys/auth/role/:roleId/res', ['roleId'], null, 'tree'),
+    proxy: Tool.base.ux.BaseRestProxy.create({
+        url: AT.app.server + '/sys/auth/role/:roleId/res',
+        idArray: ['roleId'],
+        reader: {
+            type: 'json',
+            transform: {
+                fn: function (data) {
+                    let returnData = null;
+
+                    // 处理数据前的预处理。提取数据给框架用
+                    try {
+                        let success = data.code == 0;
+                        if (typeof (data.data.children) != 'undefined') {
+                            //TODO tree 的 children
+                            data.success = success;
+                            data.children = data.data.children;
+                            returnData = data;
+                        } else if (Array.isArray(data.data.list)) {
+                            data.data.success = success;
+                            returnData = data.data;
+                        } else {
+                            data.success = success;
+                            data.list = data.data;
+                            returnData = data;
+                        }
+
+                    } catch (e) {
+                        returnData = data;
+                    }
+
+                    // this.dto = returnData;
+                    console.info('processJson:');
+                    console.log(returnData);
+                    return returnData;
+
+                },
+                scope: this
+            },
+            rootProperty: 'children',
+            totalProperty: 'total',
+            successProperty: 'success'
+        },
     }),
 });
 

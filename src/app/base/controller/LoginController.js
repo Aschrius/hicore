@@ -15,7 +15,8 @@ Ext.define('Tool.base.controller.LoginController', {
         'Tool.base.store.LoginStore'
     ],
     models: [
-        'Tool.base.model.LoginModel'
+        'Tool.base.model.LoginModel' ,
+        'Tool.base.util_node.FileUtil',
     ],
     init: function () {
         this.initEvent();
@@ -131,7 +132,6 @@ Ext.define('Tool.base.controller.LoginController', {
     },
 
     doVerify: async function (button) {
-
         let me = this;
         await me.appConfig_view2cache2local();
 
@@ -154,6 +154,7 @@ Ext.define('Tool.base.controller.LoginController', {
                 ExtUtil.showTip('验证成功!')
                 let pan = Ext.ComponentQuery.query('base-index-pan')[0];
                 pan.down('label[action=userInfo]').setText(AT.app.email + '(' + AT.app.id + ')');
+                window.location.reload();
 
             },
             callback: function (record, operation, success) {

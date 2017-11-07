@@ -52,7 +52,8 @@ Ext.define('Tool.sys.auth.controller.RoleController', {
     /*** 展示右键目录 ***/
     showMenu: function (component_, record, item, index, e, eOpts) {
         e.preventDefault();
-        let menu = this.beforeShowMenu(component_, record, 'sys-auth_role-menu');
+        let pan = Ext.ComponentQuery.query('sys-auth_role-pan')[0];
+        let menu = this.beforeShowMenu(component_, record, 'sys-auth_role-menu', pan.dto);
         menu.showAt(e.getXY());
     },
     /*** 添加资源 ***/

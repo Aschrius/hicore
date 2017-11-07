@@ -1,10 +1,13 @@
 ﻿Ext.define('Tool.trend.bili.view.MarkPan', {
     extend: 'Ext.panel.Panel',
+    id: 'trend-bili_mark-pan',
     alias: 'widget.trend-bili_mark-pan',
     status: {
         id: 'trend-bili_mark-pan'
     },
-    id: 'trend-bili_mark-pan',
+    dto: {
+        record: null
+    },
     title: '收录',
     initComponent: function () {
 
@@ -41,6 +44,7 @@
         let statusStore = Ext.StoreMgr.get('trend-bili_mark_status-store');
         let markStore = Ext.StoreMgr.get('trend-bili_mark-store');
         let markHelperStore = Ext.StoreMgr.get('trend-bili_mark_helper-store');
+
 
         me.closable = false;
         me.layout = 'border';
@@ -123,6 +127,7 @@
                 items: [
                     {
                         title: '收录',
+                        action: 'mark',
                         items: {
                             xtype: 'grid',
                             action: 'mark',
@@ -278,6 +283,38 @@
 
                                     }
 
+                                }, {
+                                    xtype: 'actioncolumn',
+                                    action: 'addOrDeleteAction',
+                                    header: '本期推荐',
+                                    flex: 1,
+                                    align: 'center',
+                                    hidden: true,
+                                    items: [
+                                        {
+                                            getClass: function (v, meta, record) {
+                                                try {
+                                                    let index = me.dto.index;
+                                                    let pickupBatchNo = record.get('pickupBatchNo');
+
+                                                    if (pickupBatchNo == null) {
+                                                        return 'AtAdd'
+                                                    } else if (pickupBatchNo == index.batchNo) {
+                                                        return 'AtDelete'
+                                                    } else {
+                                                        return 'AtForbidden'
+                                                    }
+
+                                                } catch (e) {
+                                                    console.log(e)
+                                                }
+                                            },
+                                            handler: function (grid, rowIndex, colIndex, item) {
+                                                let record = grid.getStore().getAt(rowIndex);
+                                                this.fireEvent('addOrDelclick', item, grid, record);
+                                            }
+                                        }
+                                    ]
                                 }
                             ],
                             dockedItems: [
@@ -325,31 +362,70 @@
                                                     name: 'status',
                                                     inputValue: 'isPickup:-1',
                                                 },
-
                                                 {
                                                     boxLabel: '拉黑',
                                                     isPickup: true,
                                                     name: 'status',
                                                     inputValue: 'isPickup:-2',
                                                 },
-                                                {
-                                                    xtype: 'combobox',
-                                                     style: 'margin-left:1rem;',
-                                                    name: 'index',
-                                                    fieldLabel: "<strong>推荐期刊</strong>",
-                                                    labelWidth: 75,
-                                                    width: 200,
-                                                    store: Ext.StoreMgr.get('trend-bili_rank_index-store'),
-                                                    editable: false,
-                                                    displayField: 'info',
-                                                    valueField: 'id',
-                                                    emptyText: '-',
-                                                }
 
 
                                             ],
                                             allowBlank: false
-                                        }, '->', {
+                                        },
+                                        '->',
+                                        {
+                                            group: 'markorder',
+                                            xtype: 'datefield',
+                                            vtype: 'daterange',//daterange类型为上代码定义的类型
+
+                                            fieldLabel: 'from',
+                                            id: 'markfrom', name: 'markfrom',
+
+
+                                            endDateField: 'markto',
+                                            width: 200,
+                                            labelWidth: 30,
+                                            labelSeparator: '',
+                                            msgTarget: 'side',
+
+                                            autoFitErrors: false,
+                                            // value: Ext.util.Format.date(Ext.Date.add(new Date(), Ext.Date.DAY, -7), "Y-m-d"),
+                                            allowBlank: true,
+                                            format: 'Y-m-d',
+
+                                            maxValue: new Date(),
+
+                                        },
+                                        {
+                                            group: 'markorder',
+                                            xtype: 'datefield',
+                                            vtype: 'daterange',//daterange类型为上代码定义的类型
+
+                                            fieldLabel: 'to',
+                                            id: 'markto', name: 'markto',
+
+                                            width: 200,
+                                            labelWidth: 20,
+                                            labelSeparator: '',
+                                            msgTarget: 'side',
+
+                                            autoFitErrors: false,
+                                            // value: Ext.util.Format.date(Ext.Date.add(new Date(), Ext.Date.MONTH, 0), "Y-m-d"),
+                                            allowBlank: true,
+                                            format: 'Y-m-d',
+
+                                            maxValue: new Date(),
+
+
+                                        }
+                                    ]
+                                },
+                                {
+                                    xtype: 'toolbar',
+                                    dock: 'top',
+                                    items: [
+                                        '->', {
                                             xtype: 'label',
                                             html: 'AV',
                                             style: 'background:#66ccff;height:24px;line-height:24px;width:24px;text-align:center;color:#fff;border-radius: 10px 0px 0px 0px;margin:0px'
@@ -389,25 +465,35 @@
                             action: 'markHelper',
                             layout: 'fit',
                             border: false,
+                            bodyBoder: false,
                             hideHeaders: false,
                             store: markHelperStore,
                             sortableColumns: false,
                             plugins: [
                                 {
                                     ptype: 'rowexpander',
+                                    selectRowOnExpand: true,
                                     rowBodyTpl: new Ext.XTemplate(
                                         '<tpl><p style="color: darkslategrey;">{desc}</p></tpl>'
-                                    )
+                                    ),
+                                    listeners: {
+                                        expandbody: function () {//无法触发这个是事件
+                                            console.log('Ext.grid.plugin.RowExpander');
+                                        }
+                                    }
+
                                 },
                                 Ext.create('Ext.grid.plugin.CellEditing', {
                                         clicksToEdit: 1 //设置单击单元格编辑
                                     }
                                 )
                             ],
+
                             dockedItems: [
                                 {
                                     xtype: 'pagingtoolbar',
                                     dock: 'bottom',
+
                                     displayInfo: false,
                                     store: markHelperStore,
                                 },
@@ -453,9 +539,15 @@
                                             allowBlank: false
                                         },
                                         '->', {
+                                            xtype: 'textfield',
+                                            label: '',
+                                            action:'keyword',
+                                            labelWidth: 0,
+                                            labelSeparator: ''
+                                        }, {
                                             xtype: 'button',
-                                            doAction: 'showExpressions',
-                                            text: '公式'
+                                            doAction: 'showMarkSearch',
+                                            text: '检索'
                                         }
                                     ]
                                 },
@@ -470,6 +562,8 @@
                                         {
                                             xtype: 'radiogroup',
                                             action: 'action2',
+                                            boder: false,
+                                            bodyBoder: false,
                                             defaults: {
                                                 width: 78,
                                                 name: 'order_type',
@@ -503,8 +597,9 @@
                                             vtype: 'daterange',//daterange类型为上代码定义的类型
                                             endDateField: 'to',//必须跟endDate的id名相同
                                             maxValue: new Date(),
-                                            value: Ext.util.Format.date(Ext.Date.add(new Date(), Ext.Date.DAY, -7), "Y-m-d")
-                                            , allowBlank: false, format: 'Y-m-d', fieldLabel: 'from', labelWidth: 30
+                                            value: Ext.util.Format.date(Ext.Date.add(new Date(), Ext.Date.DAY, -7), "Y-m-d"),
+                                            allowBlank: false, format: 'Y-m-d', fieldLabel: 'from', labelWidth: 30
+
                                         },
                                         {
                                             xtype: 'datefield',
@@ -598,56 +693,56 @@
                                         }
                                         return value.coin
                                     }
-                                }, {
-                                    dataIndex: 'expression',
-                                    header: '表达式',
-                                    flex: 1,
-                                    renderer: function (value, cellmeta, record, rowIndex, columnIndex, store) {
-
-                                        try {
-                                            let id = Ext.ComponentQuery.query('trend-index-pan combobox[name=rank]')[0].getValue();
-                                            let localRankStore = Ext.StoreMgr.get('trend-bili_local-rank-store');
-                                            let idx = localRankStore.find('id', id);
-                                            let rankRecord = localRankStore.getAt(idx);
-
-                                            let expressions = rankRecord.get('expressions');
-                                            let play = record.get('play');
-                                            let favorites = record.get('favorites');
-                                            let videoReview = record.get('video_review');
-                                            let coin = 0, reivew = 0;
-                                            try {
-                                                coin = record.get('stat').coin;
-                                                review = record.get('stat').reply;
-                                            } catch (e) {
-                                            }
-
-                                            expressions = Ext.String.trim(expressions);
-                                            expressions = expressions.replace(/play/g, play);
-                                            expressions = expressions.replace(/favorites/g, favorites);
-                                            expressions = expressions.replace(/videoReview/g, videoReview);
-                                            expressions = expressions.replace(/coin/g, coin);
-                                            expressions = expressions.replace(/review/g, review);
-                                            expressions = expressions.replace(/\s/g, '');
-                                            expressions = expressions.replace(/\n/g, '');
-                                            expressions = expressions.replace(/\r/g, '');
-                                            if (
-                                                /^[(\d+]/.test(expressions) &&
-                                                /[\d+)]$/.test(expressions) &&
-                                                /^[\d\+-\\*/\(\)]+$/.test(expressions)
-                                            )
-                                                value = eval(expressions);
-                                            else if (expressions == '')
-                                                value = '';
-                                            else
-                                                value = '表达式有误1';
-
-                                        } catch (e) {
-                                            value = '表达式有误2';
-                                            console.log(e.stack);
-                                        }
-
-                                        return value;
-                                    }
+                                    // }, {
+                                    //     dataIndex: 'expression',
+                                    //     header: '表达式',
+                                    //     flex: 1,
+                                    //     renderer: function (value, cellmeta, record, rowIndex, columnIndex, store) {
+                                    //
+                                    //         try {
+                                    //             let id = Ext.ComponentQuery.query('trend-index-pan combobox[name=rank]')[0].getValue();
+                                    //             let localRankStore = Ext.StoreMgr.get('trend-bili_local-rank-store');
+                                    //             let idx = localRankStore.find('id', id);
+                                    //             let rankRecord = localRankStore.getAt(idx);
+                                    //
+                                    //             let expressions = rankRecord.get('expressions');
+                                    //             let play = record.get('play');
+                                    //             let favorites = record.get('favorites');
+                                    //             let videoReview = record.get('video_review');
+                                    //             let coin = 0, reivew = 0;
+                                    //             try {
+                                    //                 coin = record.get('stat').coin;
+                                    //                 review = record.get('stat').reply;
+                                    //             } catch (e) {
+                                    //             }
+                                    //
+                                    //             expressions = Ext.String.trim(expressions);
+                                    //             expressions = expressions.replace(/play/g, play);
+                                    //             expressions = expressions.replace(/favorites/g, favorites);
+                                    //             expressions = expressions.replace(/videoReview/g, videoReview);
+                                    //             expressions = expressions.replace(/coin/g, coin);
+                                    //             expressions = expressions.replace(/review/g, review);
+                                    //             expressions = expressions.replace(/\s/g, '');
+                                    //             expressions = expressions.replace(/\n/g, '');
+                                    //             expressions = expressions.replace(/\r/g, '');
+                                    //             if (
+                                    //                 /^[(\d+]/.test(expressions) &&
+                                    //                 /[\d+)]$/.test(expressions) &&
+                                    //                 /^[\d\+-\\*/\(\)]+$/.test(expressions)
+                                    //             )
+                                    //                 value = eval(expressions);
+                                    //             else if (expressions == '')
+                                    //                 value = '';
+                                    //             else
+                                    //                 value = '表达式有误1';
+                                    //
+                                    //         } catch (e) {
+                                    //             value = '表达式有误2';
+                                    //             console.log(e.stack);
+                                    //         }
+                                    //
+                                    //         return value;
+                                    //     }
                                 }, {
                                     dataIndex: 'thisRank',
                                     header: '本期排名',
@@ -745,6 +840,34 @@
 
                                     }
 
+                                }, {
+                                    xtype: 'actioncolumn',
+                                    action: 'addOrDeleteAction',
+                                    header: '本期推荐',
+                                    flex: 1,
+                                    align: 'center',
+                                    items: [{
+                                        getClass: function (v, meta, record) {
+                                            try {
+                                                let index = me.dto.index;
+                                                let pickupBatchNo = record.get('pickupBatchNo');
+                                                if (pickupBatchNo == null) {
+                                                    return 'AtAdd'
+                                                } else if (pickupBatchNo == index.batchNo) {
+                                                    return 'AtDelete'
+                                                } else {
+                                                    return 'AtForbidden'
+                                                }
+
+                                            } catch (e) {
+                                                console.log(e)
+                                            }
+                                        },
+                                        handler: function (grid, rowIndex, colIndex, item) {
+                                            let record = grid.getStore().getAt(rowIndex);
+                                            this.fireEvent('addOrDelclick', item, grid, record);
+                                        }
+                                    }]
                                 }
                             ]
                         }

@@ -5,6 +5,7 @@ try {
 } catch (e) {
     console.log(e)
 }
+
 class ExtUtil {
     // 默认约定xtype==id
     static getDatasFromGrid(grid) {
@@ -195,6 +196,7 @@ class ExtUtil {
     }
 
     static addNewTabpanel(tabpanel, xtype, dto) {
+        console.log(dto)
         // alert('new')
         let pan = null;
         let id = xtype;
@@ -202,31 +204,30 @@ class ExtUtil {
         oldItems.forEach(function (component) {
             tabpanel.remove(component);
         });
-        pan = Ext.widget(xtype);
-        if (dto != 'undefined') {
-            pan.dto = dto
-        }
+        pan = Ext.widget(xtype, {
+            dto: dto
+        });
+        pan.setClosable(true);
         tabpanel.add(pan);
         tabpanel.setActiveTab(id);
         return pan;
     }
 
     static addOrActiveTabpanel(tabpanel, xtype, dto) {
-        // alert('cache')
+        console.log(dto)
         let pan = null;
         let id = xtype;
         let oldItems = Ext.ComponentQuery.query(xtype);
         if (oldItems.length == 0) {
-            pan = Ext.widget(xtype);
-            if (dto != 'undefined') {
-                pan.dto = dto;
-            }
+            pan = Ext.widget(xtype, {
+                dto: dto
+            });
             tabpanel.add(pan);
-            // alert('cache:false')
         } else {
-            // alert('cache:true')
             pan = oldItems[0];
         }
+        pan.setClosable(true);
+
         tabpanel.setActiveTab(id);
         return pan;
     }
@@ -517,7 +518,9 @@ class ExtUtil {
                     padding: '30 0 0 30',
                     items: {
                         xtype: 'label',
-                        html: '<span style="color: grey;font-weight:bold ;">' + text + '</span>'
+                        text: text,
+                        action: text,
+                        style: 'color:grey;font-weight:bold;',
                     }
 
                 }, {

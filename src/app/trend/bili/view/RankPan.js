@@ -4,22 +4,29 @@ Ext.define('Tool.trend.bili.view.RankPan', {
     id: 'trend-bili_rank-pan',
     title: '榜单',
     initComponent: function () {
+        let self = this;
+        let interfaceIdSet = new Set();
+        try {
+            if (self.dto.interfaceIdSet != null) interfaceIdSet = self.dto.interfaceIdSet;
+        } catch (e) {
+        }
+
         let typeStore = Tool.trend.bili.store.RankTypeStore.create();
         let dataTypeStore = Tool.trend.bili.store.RankDataTypeStore.create();
         let zoneStore = Tool.trend.bili.store.RankZoneStore.create();
 
 
-        let me = this;
-        me.layout = 'fit';
-        me.border = false;
-        me.bodyBorder = false;
-        me.items = [{
+        self.layout = 'fit';
+        self.border = false;
+        self.bodyBorder = false;
+        self.items = [{
             xtype: 'grid',
             border: false,
             store: 'Tool.trend.bili.store.RankStore',
             tbar: [
                 "->", {
                     xtype: 'button',
+                    hidden: !interfaceIdSet.has('post'),
                     text: '增',
                     iconCls: 'Vcardadd',
                     doAction: 'show',

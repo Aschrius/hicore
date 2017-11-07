@@ -4,12 +4,18 @@ Ext.define('Tool.trend.bili.view.ZonePan', {
     id: 'trend-bili_zone-pan',
     title: '分区',
     initComponent: function () {
+        let self = this;
+        let interfaceIdSet = new Set();
+        try {
+            if (self.dto.interfaceIdSet != null) interfaceIdSet = self.dto.interfaceIdSet;
+        } catch (e) {
+        }
+
         let tagStore = Ext.StoreMgr.get('trend-bili_zonetagstatus-store');
-        let me = this;
-        me.layout = 'fit';
-        me.border = false;
-        me.bodyBorder = false;
-        me.items = [{
+        self.layout = 'fit';
+        self.border = false;
+        self.bodyBorder = false;
+        self.items = [{
             xtype: 'grid',
             border: false,
             store: 'Tool.trend.bili.store.ZoneStore',
@@ -18,6 +24,7 @@ Ext.define('Tool.trend.bili.view.ZonePan', {
                     xtype: 'button',
                     text: '增',
                     iconCls: 'Vcardadd',
+                    hidden: !interfaceIdSet.has('post'),
                     doAction: 'show',
                     dto: {
                         actionType: 1,
@@ -43,7 +50,7 @@ Ext.define('Tool.trend.bili.view.ZonePan', {
             }, {
                 text: '采集',
                 dataIndex: 'tagStatus',
-                width:75,
+                width: 75,
                 renderer: function (value) {
                     let idx = tagStore.find('status', value);
                     let statusRecord = tagStore.getAt(idx);

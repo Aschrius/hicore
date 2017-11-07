@@ -224,12 +224,16 @@ Ext.define('Tool.trend.bili.controller.MaterialController', {
                 datas.shift();// 默认第一个不输出
             }
 
-            await this.doExpImg(datas, name);
-            if (type == 2) {
+            if (type == 3) {
+                // 特刊
+                await this.doExpImgSp(datas, name);
+            } else if (type == 2) {
                 // 副刊
+                await this.doExpImg(datas, name);
                 await this.doSpliceImp(datas, name);
             } else {
                 // 主刊
+                await this.doExpImg(datas, name);
                 await this.doExpYml(datas, name, top);
             }
 
@@ -597,5 +601,92 @@ Ext.define('Tool.trend.bili.controller.MaterialController', {
             console.log(logContent);
         }
         // ExtUtil.showTip('导出完毕');
+    },
+
+    doExpImgSp: async function (datas, name) {
+        let me = this;
+        let pan = Ext.ComponentQuery.query('trend-bili_material-pan')[0];
+        let type = parseInt(pan.down('radiogroup[action=type]').getValue().type); // 1:主榜;2:副榜;3:特刊;
+
+        let rank = this.getRank();
+        let part = name.split('_')[1];
+
+        // 1. 准备数据
+        let basePath = AT.app.path + '/../conf/trend_bili/' + rank.get('id') + '/tpl/';
+
+
+        let tplCanvas = document.createElement("canvas");
+
+        let tplCtx = tplCanvas.getContext('2d');
+        let PREFIX = 'av';
+        let INDEX_FIELD = 'aid';
+
+        for (let i = 0; i < datas.length; i++) {
+            let fit0i = me.fit0(datas[i].rank, datas.length);
+            let configPath = basePath + part + '_' + fit0i + '.YML';
+            let imagePath = basePath + part + '_' + fit0i + '.PNG';
+            let tplConfig = await FileUtil.parseYmlAsync(configPath, 'utf-8');
+            let tplImage = await ImageUtil.loadAsync(imagePath);
+
+            tplCanvas.setAttribute("width", tplImage.width);
+            tplCanvas.setAttribute("height", tplImage.height);
+
+
+            // 1.清除数据
+            ImageUtil.clear(tplCtx, tplImage.width, tplImage.height);
+            // 2.绘制背景模板
+            tplCtx.drawImage(tplImage, 0, 0);
+            // 3.获取数据
+            let data = datas[i];
+            // 4. 遍历属性
+            for (let field in data) {
+                let value = data[field];
+                if (field == 'aid') {
+                    value = 'av' + value;
+                    console.log('aid....' + value)
+                }
+                if (field == 'score') {
+                    value = parseInt(data[field]) / 100;
+                }
+
+                // 2.4.1.判断config中是否有此配置,亦或配置为空
+                let config = tplConfig[field];
+                if (typeof(config) == 'undefined' || config == null || config.oc == false) {
+                    continue;
+                }
+                if (config.isImage == true && config.oc == true) {
+                    // 2.4.2.绘制图片
+                    let tempImage = await ImageUtil.loadAsync(value);
+                    let retC = ImageUtil.newCanvas(tempImage.width, tempImage.height);
+                    let tempCanvas = retC.canvas;
+                    let tempCtx = retC.context;
+                    tempCtx.drawImage(tempImage, 0, 0, config.width, config.height);
+
+                    let tar = tempCtx.getImageData(0, 0, tempImage.width, tempImage.height);
+                    let src = tplCtx.getImageData(0, 0, tplImage.width, tplImage.height);
+                    let fin = ImageUtil.fillImage(src, tar, config.x, config.y);
+                    tplCtx.putImageData(fin, 0, 0);
+
+                } else {
+                    // 2.4.2.绘制文字
+                    let conf = ImageUtil.initFontConfig(config);
+                    // 2.4.3.数字加逗号
+                    if (field == 'play' || field == 'favorites' || field == 'review' || field == 'videoReview' || field == 'coins' || field == 'score') {
+                        var ret__ = ExtUtil.splitNumber(parseInt(value));
+                        conf.text = ret__;
+                    } else {
+                        conf.text = value;
+                    }
+                    ImageUtil.fillText(tplCtx, conf);
+                }
+            }// 遍历结束
+            // 保存
+            await ImageUtil.savePngAsync(tplCanvas, AT.app.path + '/../_rank_list/' + PREFIX + data[INDEX_FIELD] + '.png');
+            let logContent = (1 + i) + '-' + INDEX_FIELD + ':' + data[INDEX_FIELD] + '.......done.';
+            console.log(logContent);
+
+        }
+
+
     }
 });

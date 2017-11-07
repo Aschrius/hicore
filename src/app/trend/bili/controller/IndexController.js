@@ -27,6 +27,7 @@ Ext.define('Tool.trend.bili.controller.IndexController', {
         'Tool.trend.bili.store.PartStore',
         'Tool.trend.bili.store.DocPartStore',
         'Tool.trend.bili.store.DocFilterStore',
+        'Tool.trend.bili.store.RankZoneStore',
     ],
     models: [
         'Tool.trend.bili.model.IndexModel',
@@ -47,7 +48,8 @@ Ext.define('Tool.trend.bili.controller.IndexController', {
         this.control({
             'trend-bili_index-pan button[doAction]': {click: me.doAction},
             'trend-bili_index-win button[doAction]': {click: me.doAction},
-            'trend-bili_index-menu menuitem[doAction]': {click: me.doAction},
+            'trend-bili_index-menu component[doAction]': {click: me.doAction},
+            // 'trend-bili_index-menu menuitem[doAction]': {click: me.doAction},
             'trend-bili_indexexpcsv-win button[doAction]': {click: me.doAction},
             'trend-bili_material-win button[doAction]': {click: me.doAction},
 
@@ -72,9 +74,10 @@ Ext.define('Tool.trend.bili.controller.IndexController', {
             // 'trend-bili_material-win radiogroup[action=tag]': {
             //     change: me.initMaterialGird
             // }
-
-
             'trend-bili_doc_part-win button[doAction]': {click: me.doAction},
+            'trend-bili_doc_filter-win actioncolumn': {
+                addOrDelclick: me.doPickup
+            }
         });
     },
     /*** 展示(通用) ***/
@@ -95,6 +98,14 @@ Ext.define('Tool.trend.bili.controller.IndexController', {
     /*** 展示右键目录 ***/
     showMenu: async function (component_, record, item, index, e, eOpts) {
         e.preventDefault();
+        let pan = Ext.ComponentQuery.query('trend-bili_index-pan')[0];
+        let menu = this.beforeShowMenu(component_, record, 'trend-bili_index-menu', pan.dto);
+
+        if (record.get('status') != 2) {
+
+            menu.showAt(e.getXY());
+            return;
+        }
         let me = this;
         let store = Ext.StoreMgr.get('trend-bili_bili_part-store');
         Ext.apply(store.getProxy().extraParams, {
@@ -108,18 +119,15 @@ Ext.define('Tool.trend.bili.controller.IndexController', {
             callback: function (records, operation, success) {
                 if (success) {
                     if (typeof ( records) == 'undefined' || records == null || records.length == 0) {
-                        Ext.MessageBox.show({
-                            title: 'Error',
-                            msg: '<span style="color:red;font-weight: bold;">暂无分P数据</span>',
-                            buttons: Ext.MessageBox.OK,
-                            icon: Ext.MessageBox.ERROR
-                        });
-                    } else {
-
-                        let menu = this.beforeShowMenu(component_, record, 'trend-bili_index-menu');
-                        menu.showAt(e.getXY());
-
+                        ExtUtil.showTip('暂无分P数据');
+                        // Ext.MessageBox.show({
+                        //     title: 'Error',
+                        //     msg: '<span style="color:red;font-weight: bold;">暂无分P数据</span>',
+                        //     buttons: Ext.MessageBox.OK,
+                        //     icon: Ext.MessageBox.ERROR
+                        // });
                     }
+                    menu.showAt(e.getXY());
                 } else {
                     Ext.MessageBox.show({
                         title: 'Error',
@@ -340,6 +348,9 @@ Ext.define('Tool.trend.bili.controller.IndexController', {
 
     },
     doRank: function (component) {
+        let aid = null;
+
+
         let myMask = null;
 
         let win = Ext.ComponentQuery.query('trend-bili_index-pan')[0];
@@ -348,7 +359,7 @@ Ext.define('Tool.trend.bili.controller.IndexController', {
         myMask = new Ext.LoadMask(win, {msg: "正在操作", autoScroll: true, style: 'padding:10px;'});
         myMask.show();
 
-        let menu = component.up('menu');
+        let menu = component.up('menu[action=top]');
         let indexRecord = null;
         if (typeof(menu) == 'undefined' || menu == null) {
             // index expcsv 入口
@@ -356,6 +367,8 @@ Ext.define('Tool.trend.bili.controller.IndexController', {
         } else {
             // 是menu入口
             indexRecord = menu.dto.record;
+
+            aid = menu.down('textfield[action=aid]').getValue();
         }
         let type = component.dto.type;
         let id = indexRecord.get('id');
@@ -367,6 +380,7 @@ Ext.define('Tool.trend.bili.controller.IndexController', {
         });
         record.set('type', type);
         record.set('id', id);
+        record.set('aid', aid);
         record.phantom = false;
         record.save({
             success: function (record, operation) {
@@ -491,110 +505,90 @@ Ext.define('Tool.trend.bili.controller.IndexController', {
         exec(cmdStr, function (err, stdout, stderr) {
         });
     },
-    // doExpYml: async function () {
-    //     let datas = this.doPrepareData();
-    //     let record = this.getRank();
-    //     let win = Ext.ComponentQuery.query('trend-bili_material-win')[0];
-    //
-    //     let outputContent = '---\r\n';
-    //     for (let i = 0; i < datas.length; i++) {
-    //         outputContent += '- :rank: ' + datas[i].rank + '\r\n';
-    //         outputContent += '  :name: av' + datas[i].aid + '\r\n';
-    //         outputContent += '  :length: 20' + '\r\n';
-    //         outputContent += '  :offset: 0' + '\r\n';
-    //     }
-    //     let path = AT.path + '../../../' + record.get('id') + '_' + win.down('radiogroup[action=tag]').getValue().tag + '.YML';
-    //     await FileUtil.writeFileAsync(path, outputContent, 'utf-8');
-    //     ExtUtil.showTip('操作完成');
-    //
-    //     let exec = require('child_process').exec;
-    //     let cmdStr = 'start ' + path;
-    //     exec(cmdStr, function (err, stdout, stderr) {
-    //     });
-    // },
-    // doExpImg: async function () {
-    //
-    //     let datas = this.doPrepareData();
-    //     let win = Ext.ComponentQuery.query('trend-bili_doc_part-win')[0];
-    //     let partRecord = win.dto.record ;
-    //     let type = partRecord.get('avsType') ;
-    //
-    //     let record = this.getRank();
-    //     let rankId = record.get('id');
-    //     let tag = win.down('radiogroup[action=tag]').getValue().tag;
-    //     // 1. 准备数据
-    //     let basePath = AT.path + '../../../' + 'conf/rank/' + rankId + '/tpl/';
-    //     let configPath = basePath + tag + '.YML';
-    //     let imagePath = basePath + tag + '.PNG';
-    //
-    //     let tplConfig = await FileUtil.parseYmlAsync(configPath, 'utf-8');
-    //     let tplImage = await ImageUtil.loadAsync(imagePath);
-    //
-    //     let tplCanvas = document.createElement("canvas");
-    //     tplCanvas.setAttribute("width", tplImage.width);
-    //     tplCanvas.setAttribute("height", tplImage.height);
-    //
-    //     let tplCtx = tplCanvas.getContext('2d');
-    //     let PREFIX = 'av';
-    //     let INDEX_FIELD = 'aid';
-    //
-    //
-    //     // 2. 绘制图片
-    //     for (let i = 0; i < datas.length; i++) {
-    //
-    //         // 1.清除数据
-    //         ImageUtil.clear(tplCtx, tplImage.width, tplImage.height);
-    //         // 2.绘制背景模板
-    //         tplCtx.drawImage(tplImage, 0, 0);
-    //         // 3.获取数据
-    //         let data = datas[i];
-    //         // 4. 遍历属性
-    //         for (let field in data) {
-    //             let value = data[field];
-    //             if (field == 'aid') {
-    //                 value = 'av' + value;
-    //                 console.log('aid....' + value)
-    //             }
-    //             if (field == 'score') {
-    //                 value = parseInt(data[field]) / 100;
-    //             }
-    //
-    //             // 2.4.1.判断config中是否有此配置,亦或配置为空
-    //             let config = tplConfig[field];
-    //             if (typeof(config) == 'undefined' || config == null || config.oc == false) {
-    //                 continue;
-    //             }
-    //             if (config.isImage == true && config.oc == true) {
-    //                 // 2.4.2.绘制图片
-    //                 let tempImage = await ImageUtil.loadAsync(value);
-    //                 let {tempCanvas, tempCtx} = ImageUtil.newCanvas(tempImage.width, tempImage.height);
-    //                 tempCtx.drawImage(tempImage, 0, 0, config.width, config.height);
-    //
-    //                 let tar = tempCtx.getImageData(0, 0, tempImage.width, tempImage.height);
-    //                 let src = tplCtx.getImageData(0, 0, tplImage.width, tplImage.height);
-    //                 let fin = ImageUtil.fillImage(src, tar, config.x, config.y);
-    //                 tplCtx.putImageData(fin, 0, 0);
-    //
-    //             } else {
-    //                 // 2.4.2.绘制文字
-    //                 let conf = ImageUtil.initFontConfig(config);
-    //                 // 2.4.3.数字加逗号
-    //                 if (field == 'play' || field == 'favorites' || field == 'review' || field == 'videoReview' || field == 'coins' || field == 'score') {
-    //                     var ret__ = ExtUtil.splitNumber(parseInt(value));
-    //                     conf.text = ret__;
-    //                 } else {
-    //                     conf.text = value;
-    //                 }
-    //                 ImageUtil.fillText(tplCtx, conf);
-    //             }
-    //         }// 遍历结束
-    //         // 保存
-    //         await ImageUtil.savePngAsync(tplCanvas, AT.path + '../../../_rank_list/' + PREFIX + data[INDEX_FIELD] + '.png');
-    //         let logContent = (1 + i) + '-' + INDEX_FIELD + ':' + data[INDEX_FIELD] + '.......done.';
-    //         console.log(logContent);
-    //     }
-    //     ExtUtil.showTip('导出完毕');
-    // },
+    doPickup: function (item, grid, oldRecord) {
+
+        let mask = new Ext.LoadMask(grid, {msg: "正在操作", autoScroll: true, style: 'padding:10px;'});
+        let win = Ext.ComponentQuery.query('trend-bili_doc_filter-win')[0]
+        let indexRecord = win.dto.parent.record;
+        let pickupBatchNo = oldRecord.get('pickupBatchNo');
+
+
+        // 获取是否pickup
+        let rg = win.down('radiogroup[action=filterId]');
+        let rs = rg.getChecked();
+        let re = rs[0].record;
+        let isPickup = false;
+        if (re != null && re.get('pickup') == true) {
+            isPickup = true;
+        }
+        mask.show();
+        try {
+
+
+            let action = '';
+            let record = null;
+            if (pickupBatchNo == null) {
+                action = 'add';
+
+                record = Tool.trend.bili.model.DocPartModel.create({id: undefined});
+                record.id = undefined;
+                record.phantom = true;// 新建
+                record.set('id', undefined);
+
+            } else if (pickupBatchNo == indexRecord.get('batchNo')) {
+                action = 'delete';
+
+                record = Tool.trend.bili.model.DocPartModel.create({id: oldRecord.get('aid')});
+                record.id = oldRecord.get('aid')
+                record.phantom = false;
+
+            } else {
+                action = 'forbidden';
+                ExtUtil.showTip(`已在第${pickupBatchNo}期推荐`);
+                return;
+            }
+
+
+            record.set('aid', oldRecord.get('aid'));
+            record.set('rankId', indexRecord.get('rankId'));
+            record.set('indexId', indexRecord.get('id'));
+            record.set('pickupBatchNo', indexRecord.get('batchNo'));
+
+            let proxy = record.getProxy();
+            Ext.apply(proxy.extraParams, {
+                rankId: indexRecord.get('rankId'),
+                indexId: indexRecord.get('id')
+            });
+            record.save({
+                success: function (record, operation) {
+                    if (action == 'add') {
+                        oldRecord.set('pickupBatchNo', indexRecord.get('batchNo'));
+                        oldRecord.commit();
+                    } else if (action == 'delete') {
+                        oldRecord.set('pickupBatchNo', null);
+                        oldRecord.commit();
+                    }
+
+
+                },
+                callback: function (record, operation, success) {
+                    mask.hide();
+                    if (isPickup) {
+                        // pickup直接删除
+                        win.down('grid').getStore().remove(oldRecord)
+                    }
+
+                }
+            });
+
+
+        } catch (e) {
+            mask.hide();
+            throw e;
+        }
+
+
+    }
 
 
 });

@@ -20,6 +20,7 @@ Ext.define('Tool.trend.bili.controller.ZoneController', {
         'Tool.trend.bili.store.ZoneTagStatusStore',
         'Tool.trend.bili.store.ZoneExpCsvStore',
         'Tool.trend.bili.store.ExpCsvStatusStore',
+        'Tool.trend.bili.store.RankZoneStore',
     ],
     models: [
         'Tool.trend.bili.model.ZoneModel',
@@ -105,7 +106,8 @@ Ext.define('Tool.trend.bili.controller.ZoneController', {
     },
     showMenu: function (component_, record, item, index, e, eOpts) {
         e.preventDefault();
-        let menu = this.beforeShowMenu(component_, record, 'trend-bili_zone-menu');
+        let pan = Ext.ComponentQuery.query('trend-bili_zone-pan')[0];
+        let menu = this.beforeShowMenu(component_, record, 'trend-bili_zone-menu', pan.dto);
         menu.showAt(e.getXY());
     },
     /*** 添加资源 ***/
@@ -196,7 +198,6 @@ Ext.define('Tool.trend.bili.controller.ZoneController', {
         task.save({
             success: function (record, operation) {
                 ExtUtil.showTip('操作成功');
-                win.close();
                 me.initGrid();
             },
             callback: function (record, operation, success) {
@@ -403,7 +404,7 @@ Ext.define('Tool.trend.bili.controller.ZoneController', {
             tagId: tagRecord.get('id')
         });
         record.set('id', undefined);
-        record.set('type', 1009);
+        record.set('type', 2003);
         record.phantom = true;// 新建
         record.save({
             success: function (record, operation) {

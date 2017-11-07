@@ -17,7 +17,6 @@ Ext.define('Tool.base.controller.IndexController', {
         let me = this;
         this.initEvent();
         this.initCache();
-        this.initView();
     },
     initCache: function () {
     },
@@ -25,6 +24,7 @@ Ext.define('Tool.base.controller.IndexController', {
         let me = this;
         me.control({
             'base-index-pan component[doAction]': {click: me.doAction},
+            'base-index-pan': {afterrender: me.initView}
         });
     },
     initView: function () {
@@ -35,20 +35,31 @@ Ext.define('Tool.base.controller.IndexController', {
     },
     updateLoginUserUI: async function () {
         // 获取配置
+        let pan = Ext.ComponentQuery.query('base-index-pan')[0];
+        let userInfoLable = pan.down('label[action=userInfo]');
+        let loginInfo = '正在验证信息';
+        userInfoLable.setText(loginInfo);
         try {
+
             let isVerify = await this.confirmLogin();
             if (isVerify) {
-                let pan = Ext.ComponentQuery.query('base-index-pan')[0];
-                pan.down('label[action=userInfo]').setText(AT.app.email + '(' + AT.app.id + ')');
+                loginInfo = AT.app.email + '(' + AT.app.id + ')';
+            } else {
+                loginInfo = '(登入失败)';
             }
-        } catch (err) {
-            console.error(err);
+        } catch (e) {
+            loginInfo = '(登入失败)';
+            console.error(e);
+        } finally {
+            userInfoLable.setText(loginInfo);
         }
 
     },
     confirmLogin: function () {
         let me = this;
         return new Promise(function (resolve, reject) {
+
+
             let record = Tool.base.model.LoginModel.create();
             let proxy = record.getProxy();
             AT.app.time_difference = 0;
@@ -67,9 +78,6 @@ Ext.define('Tool.base.controller.IndexController', {
                     resolve(true);
                 },
                 callback: function (record, operation, success) {
-                    if (success != true) {
-                        me.updateLoginUserUI();
-                    }
                 }
             });
 
@@ -106,7 +114,7 @@ Ext.define('Tool.base.controller.IndexController', {
 
         let uiData = {};
         group.forEach(function (ress) {
-            console.log(ress)
+            // console.log(ress)
             // Tool.trend.bili.controller.IndexController
             // 构建controller
 
@@ -114,13 +122,13 @@ Ext.define('Tool.base.controller.IndexController', {
             let xtype1 = '';
             let xtype2 = '';
             let xtype3 = '';
+            let hasBuildController = false;
+            let interfaceId = null;
             for (let i = 0; i < ress.length; i++) {
                 let res = ress[i];
 
                 if (res.resTypeId == 1) {
                     xtype1 = res.xtype;
-                } else if (res.resTypeId == 4) {
-                    break;
                 } else if (res.resTypeId == 2) {
                     xtype2 = res.xtype;
                     // 模块
@@ -130,9 +138,14 @@ Ext.define('Tool.base.controller.IndexController', {
                             buttons: []
                         };
                     }
+                } else if (res.resTypeId == 4) {
+                    // 操作id
+                    interfaceId = res.xtype;
                 }
 
-
+                if (hasBuildController) {
+                    continue;
+                }
                 if (res.resTypeId == 3) {
                     xtype3 = res.xtype;
                     // 菜单
@@ -140,23 +153,40 @@ Ext.define('Tool.base.controller.IndexController', {
                     controllerName += '.' + res.xtype.substr(0, 1).toUpperCase() + res.xtype.substr(1);
                     controllerName += 'Controller';
 
-                    if (!set.has(controllerName))
+
+                    if (!set.has(controllerName)) {
                         uiData[xtype2].buttons.push({
                             icon: __dirname + '/' + xtype1 + '/' + xtype2 + '/res/' + xtype3 + '.png',
                             text: res.text,
                             toModule: xtype1 + '-' + xtype2 + '_' + xtype3 + '-pan',
                             dto: {
                                 controller: controllerName,
-                                useCache: false
+                                useCache: false,
+                                interfaceIdSet: new Set()
                             }
                         });
+                        set.add(controllerName);
+                    }
 
-                    set.add(controllerName);
-                    break;
+
+                    hasBuildController = true;
                 } else {
                     controllerName += '.' + res.xtype;
                 }
             }
+
+            if (hasBuildController && interfaceId != null) {
+                for (let i = 0; i < uiData[xtype2].buttons.length; i++) {
+                    if (uiData[xtype2].buttons[i].dto.controller == controllerName) {
+                        uiData[xtype2].buttons[i].dto.interfaceIdSet.add(interfaceId);
+
+                    }
+
+                }
+
+            }
+
+
         });
         AT.auth.uiData = uiData;
         if (set.size <= 0) {

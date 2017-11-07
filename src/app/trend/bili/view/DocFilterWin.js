@@ -4,8 +4,18 @@ Ext.define('Tool.trend.bili.view.DocFilterWin', {
     id: 'trend-bili_doc_filter-win',
     title: '模块',
     initComponent: function () {
-        let id = Ext.ComponentQuery.query('trend-index-pan combobox[name=rank]')[0].getValue();
         let me = this;
+
+        let indexRecord = me.dto.parent.record;
+        let indexStatus = indexRecord.get('status');
+        let hidePickup = false;
+        if (indexStatus != null)
+            if (indexStatus == 2 || indexStatus == 1 || indexStatus == -1) {
+                hidePickup = true;
+            }
+
+
+        let id = Ext.ComponentQuery.query('trend-index-pan combobox[name=rank]')[0].getValue();
         me.layout = 'fit';
         me.border = false;
         me.bodyBorder = false;
@@ -93,11 +103,60 @@ Ext.define('Tool.trend.bili.view.DocFilterWin', {
                 }, {
                     text: '稿件',
                     dataIndex: 'status',
-                    width: 50
+                    width: 50,
+                    renderer: function (value, cellmeta, record, rowIndex, columnIndex, store) {
+                        if (value == 0) {
+                            value = `<span style="color: dodgerblue;">新</span>`;
+                        } else if (value == 1) {
+                            value = `<span style="color: darkslategray;">旧</span>`;
+                        } else if (value == -1) {
+                            value = `<span style="color: red;">丢</span>`;
+                        } else if (value == -2) {
+                            value = `<span style="color: red;">回</span>`;
+                        } else {
+                            value = `<span style="color: lightgray;">？</span>`;
+                        }
+                        return value;
+                    }
                 }, {
                     text: '收录',
                     dataIndex: 'mark_status',
-                    width: 50
+                    width: 50,
+                    renderer: function (value, cellmeta, record, rowIndex, columnIndex, store) {
+                        if (value == 1) {
+                            value = `<span style="color: green;font-weight: bold">√</span>`;
+                        } else {
+                            value = `<span style="color: lightgrey;">×</span>`;
+                        }
+                        return value;
+                    }
+                }, {
+                    xtype: 'actioncolumn',
+                    action: 'addOrDeleteAction',
+                    header: '本期推荐',
+                    flex: 1,
+                    align: 'center',
+                    hidden: hidePickup,
+                    items: [
+                        {
+                            getClass: function (v, meta, record) {
+                                let indexRecord = me.dto.parent.record;
+                                let pickupBatchNo = record.get('pickupBatchNo');
+
+                                if (pickupBatchNo == null) {
+                                    return 'AtAdd'
+                                } else if (pickupBatchNo == indexRecord.get('batchNo')) {
+                                    return 'AtDelete'
+                                } else {
+                                    return 'AtForbidden'
+                                }
+                            },
+                            handler: function (grid, rowIndex, colIndex, item) {
+                                let record = grid.getStore().getAt(rowIndex);
+                                this.fireEvent('addOrDelclick', item, grid, record);
+                            }
+                        }
+                    ]
                 }
             ],
             dockedItems: [
@@ -115,8 +174,8 @@ Ext.define('Tool.trend.bili.view.DocFilterWin', {
                             items: [
                                 {
                                     boxLabel: '全部',
-                                    inputValue: null ,
-                                    checked:true
+                                    inputValue: null,
+                                    checked: true
                                 }
                             ],
                             readOnly: me.dto.actionType == 0,
@@ -136,4 +195,4 @@ Ext.define('Tool.trend.bili.view.DocFilterWin', {
 
         this.callParent();
     }
-}); 
+});

@@ -2,7 +2,7 @@ Ext.define('Tool.base.ux.BaseRestProxy', {
     extend: 'Ext.data.proxy.Rest',
     alias: 'proxy.baserestproxy',
     headers: {
-        'Authorization': 2131231
+        'Authorization': 'demodemo'
     },
     type: 'rest',
     appendId: true,
@@ -41,7 +41,8 @@ Ext.define('Tool.base.ux.BaseRestProxy', {
                     returnData = data;
                 }
 
-                console.info('processJson:');//TODO cs
+                // this.dto = returnData;
+                console.info('processJson:');
                 console.log(returnData);
                 return returnData;
 
@@ -49,26 +50,34 @@ Ext.define('Tool.base.ux.BaseRestProxy', {
             scope: this
         },
         rootProperty: 'list',
-        totalProperty: 'total',//TODO
+        totalProperty: 'total',
         successProperty: 'success'
     },
     writer: {
         type: 'json',
         writeAllFields: true // 要开启，否则rest.put 有问题
     },
-    getAuthorization: function () {
+    getAuthorization: function (config) {
+        let {url, data, method} = config;
+        url = url.replace(AT.app.server, '');
+        url = url.replace(/\\/g, '/');
+        url = url.replace(/\/\//g, '/');
+        if (!url.startsWith('/')) {
+            url = '/' + url;
+        }
         const crypto = require('crypto');
         const md5 = crypto.createHash('md5');
         let time = new Date().getTime() + AT.app.time_difference;
-        let signStr = AT.app.appKey + '.' + time + '.' + AT.app.appSecret;
-        let sign = md5.update(signStr).digest('hex');
+        let signStr = `${AT.app.appKey}.${time}.${method}:${url}.${data}.${AT.app.appSecret}`;
+        let sign = md5.update(signStr).digest('hex').toUpperCase();
 
-        return AT.app.appKey + '.' + time + '.' + sign.toUpperCase();
+        // console.debug(signStr);
+        // console.debug(sign);
+
+        return AT.app.appKey + '.' + time + '.' + sign;
     },
     buildUrl: function (req) {
         let me = this;
-
-        me.headers = {'Authorization': me.getAuthorization()};
 
 
         let config = req.getConfig();
@@ -111,18 +120,13 @@ Ext.define('Tool.base.ux.BaseRestProxy', {
         }
 
 
-        let reqJson = null;
-        try {
-            reqJson = JSON.stringify(config.params);
-        } catch (e) {
-
-        } finally {
-            console.info(req.getAction() + ':id=' + id + ':url=' + url + '\njson=' + reqJson);
-        }
         return url;
     },
     listeners: {
-
+        endprocessresponse: function (r, b, c) {
+            // 提取返回报文
+            this.rspContent = b.responseText;
+        },
         exception: function (proxy, response, options) {
             let responseData = {};
             let status = response.status;
@@ -155,6 +159,43 @@ Ext.define('Tool.base.ux.BaseRestProxy', {
     },
     isValidId: function (id) {
         return id == null ? true : (/^\d+$/.test(id) ? true : false);
+    },
+    sendRequest: function (request) {
+        let sendConfig = {};
+        let config = request.getCurrentConfig();
+
+        let authConf = {};
+        try {
+
+            let isForm = false;
+            let reg = /multipart\/form-data/i;
+            let form = Ext.getDom(config.form);
+            if (form && (config.isUpload || reg.test(form.getAttribute('enctype')))) {
+                isForm = true;
+            }
+
+
+            sendConfig = Ext.Ajax.setOptions(config);
+
+            let headers = this.headers == null ? {} : this.headers;
+            authConf.url = sendConfig.url;
+            authConf.method = sendConfig.method;
+            if (!isForm) {
+                authConf.data = sendConfig.data;
+            }
+
+            headers.Authorization = this.getAuthorization(authConf);
+            request.setHeaders(headers);
+
+            request.setRawRequest(Ext.Ajax.request(request.getCurrentConfig()));
+            this.lastRequest = request;
+        } catch (e) {
+            throw e;
+        } finally {
+            console.info(`processAjax:\n${config.action}:url=${authConf.url} \nprocessAjaxJson:\n${authConf.data}`);
+        }
+
+        return request;
     }
 
 });

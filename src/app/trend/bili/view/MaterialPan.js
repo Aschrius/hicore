@@ -52,6 +52,11 @@
                                 boxLabel: '副榜',
                                 hidden: false,
                                 inputValue: '2',
+                            },
+                            {
+                                boxLabel: '特刊',
+                                hidden: false,
+                                inputValue: '3',
                             }
                         ],
                         allowBlank: false

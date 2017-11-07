@@ -49,7 +49,8 @@ Ext.define('Tool.sys.auth.controller.ResController', {
         if (record.get('id') == 1) {
             return;
         }
-        let menu = this.beforeShowMenu(component, record, 'sys-auth_res-menu');
+        let pan = Ext.ComponentQuery.query('sys-auth_res-pan')[0];
+        let menu = this.beforeShowMenu(component, record, 'sys-auth_res-menu',pan.dto);
         menu.showAt(e.getXY());
 
     },

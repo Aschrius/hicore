@@ -63,6 +63,9 @@ Ext.define('Tool.trend.bili.model.ExpCsvModel', {
 
 
     ],
-    proxy: ExtUtil.getRestModelProxyTpl(AT.app.server + '/trend/bili/rank/:rankId/expCsv', ['rankId'], {})
+    proxy: Tool.base.ux.BaseRestProxy.create({
+        url: AT.app.server + '/trend/bili/rank/:rankId/expCsv',
+        idArray: ['rankId']
+    })
 });
 

@@ -1,4 +1,4 @@
-const {ipcMain, app, BrowserWindow} = require('electron');
+const {ipcMain, app, BrowserWindow, protocol} = require('electron');
 const fs = require('fs');
 // app.commandLine.appendSwitch('js-flags','--harmony')
 
@@ -10,6 +10,7 @@ app.on('window-all-closed', function () {
 // This method will be called when Electron has done everything
 // initialization and ready for creating browser windows.
 app.on('ready', function () {
+
     // Create the browser window.
     mainWindow = new BrowserWindow({
         width: 800,
@@ -27,6 +28,30 @@ app.on('ready', function () {
         mainWindow.openDevTools();
     }
 
+    // // app 协议注册拦截
+    // protocol.registerFileProtocol('app', function (request, callback) {
+    //     callback(null);
+    // }, function (error) {
+    //     if (error)
+    //         console.error('Failed to register protocol')
+    // });
+
+    // will-navigate
+    mainWindow.webContents.on('will-navigate', function (event, url) {
+        if (url.startsWith('APP://') || url.startsWith('app://')) {
+            event.preventDefault();
+
+            let jsonStr = url.substr(6);
+            try {
+                jsonStr = JSON.parse(jsonStr);
+                let {id, service, data} = dataStr;
+                
+
+            } catch (e) {
+            }
+        }
+
+    });
 
     // Emitted when the window is closed.
     mainWindow.on('closed', function () {
@@ -36,6 +61,7 @@ app.on('ready', function () {
         mainWindow = null;
     });
 });
+
 
 ipcMain.on('change-Host', (event, params) => {
     console.log('[' + params.urls.join() + '] change-Host to ' + params.Host);
